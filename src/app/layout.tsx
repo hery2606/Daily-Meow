@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Header from "./components/header/header";
+import Rightbar from "./components/rightbarrpage/page";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Header />
+        <div style={{ display: "flex", backgroundColor: "#FFFFF"  }}>
+          <main style={{ flex: 1 }}>{children}</main>
+
+          <aside >
+            <Rightbar />
+          </aside>
+        </div>
+            <footer
+              className="w-full py-4 mt-8 text-center text-xs text-slate-400 border-t border-slate-200 bg-gray-300"
+            >
+              © 2024 <span className="font-semibold text-slate-500">Sakuyy</span>. All rights reserved.
+            </footer>
       </body>
     </html>
   );
