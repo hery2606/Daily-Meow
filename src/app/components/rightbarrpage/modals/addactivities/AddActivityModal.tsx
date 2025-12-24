@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import { X, Disc, Coins } from "lucide-react";
 import { motion, easeIn, easeOut } from "framer-motion";
+import { useSweetAlert } from "@/app/ui/SweetAlertProvider"; 
+
 
 interface AddActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Date | null;
-  onSwitchToFinance?: () => void; // Fungsi untuk pindah ke FinanceModal
+  onSwitchToFinance?: () => void; 
 }
 
 export default function AddActivityModal({
@@ -17,10 +19,8 @@ export default function AddActivityModal({
   selectedDate,
   onSwitchToFinance,
 }: AddActivityModalProps) {
-  // State untuk form input activity
   const [selectedColor, setSelectedColor] = useState<string>("pink");
 
-  // Opsi warna Mark Color
   const colorOptions = [
     { id: "pink", bg: "bg-pink-300", ring: "ring-pink-500" },
     { id: "blue", bg: "bg-blue-300", ring: "ring-blue-500" },
@@ -28,26 +28,31 @@ export default function AddActivityModal({
     { id: "green", bg: "bg-green-300", ring: "ring-green-500" },
   ];
 
-  // Jika modal tidak dibuka, jangan render apa-apa
+   const Swal = useSweetAlert();
+
+
+  const handleSaveActivity = () => {
+    Swal.showSuccessToast("Aktivitas berhasil ditambahkan!");
+    onClose();
+  };
 
   // Definisi animasi agar konsisten
   const modalVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: 10 }, // Keadaan awal/keluar (sedikit turun & mengecil)
+    hidden: { opacity: 0, scale: 0.95, y: 10 }, 
     visible: {
       opacity: 1,
       scale: 1,
       y: 0,
-      transition: { duration: 0.2, ease: easeOut }, // Durasi animasi masuk
+      transition: { duration: 0.2, ease: easeOut }, 
     },
     exit: {
       opacity: 0,
       scale: 0.95,
-      y: -10, // Saat keluar, sedikit naik ke atas
-      transition: { duration: 0.15, ease: easeIn }, // Durasi animasi keluar lebih cepat
+      y: -10,
+      transition: { duration: 0.30, ease: easeIn }, 
     },
   };
 
-  // Format Tanggal
   const displayDate = selectedDate
     ? selectedDate.toLocaleDateString("en-US", {
         weekday: "short",
@@ -58,25 +63,20 @@ export default function AddActivityModal({
     : "Select a date";
 
   return (
-    // OVERLAY
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      // HAPUS class tailwind animate lama: animate-in fade-in duration-200
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
     >
-      {/* CONTAINER MODAL */}
       <motion.div
         variants={modalVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
         onClick={(e) => e.stopPropagation()}
-        // HAPUS class tailwind animate lama: animate-in zoom-in-95 duration-200
         className="w-full max-w-105 rounded-[30px] bg-white p-6 shadow-2xl relative"
       >
-        {/* --- HEADER --- */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-slate-800">Add Entry</h2>
@@ -185,7 +185,9 @@ export default function AddActivityModal({
           >
             Add Another
           </button>
-          <button className="bg-[#FF8FAB] hover:bg-[#ff7aa0] text-slate-900 font-bold text-sm px-6 py-3 rounded-xl shadow-sm transition-transform active:scale-95">
+          <button 
+          onClick={handleSaveActivity}
+          className="bg-[#FF8FAB] hover:bg-[#ff7aa0] text-slate-900 font-bold text-sm px-6 py-3 rounded-xl shadow-sm transition-transform active:scale-95">
             Save Activity
           </button>
         </div>

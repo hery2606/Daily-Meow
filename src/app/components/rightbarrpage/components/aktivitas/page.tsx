@@ -1,16 +1,24 @@
 "use client";
 
-// 1. IMPORT UTAMA: useState dan AnimatePresence
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // 1. Tambah useEffect
 import { Plus, Wallet, GraduationCap, CheckCircle2, Circle } from "lucide-react";
 import { AnimatePresence } from "framer-motion"; 
 
-// 2. IMPORT MODAL: Sesuaikan path foldernya
 import AddActivityModal from "../../modals/addactivities/AddActivityModal";
 
 export default function ActivitiesView() {
-  // 3. STATE: Untuk mengontrol buka/tutup modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 2. PERBAIKAN: Jangan isi new Date() langsung. Mulai dengan string kosong.
+  // Ini mencegah server dan client memiliki data yang berbeda saat render pertama.
+  const [selectedDateString, setSelectedDateString] = useState<string>("");
+
+  // 3. PERBAIKAN: Set tanggal hanya setelah komponen 'mount' di browser
+  useEffect(() => {
+    const today = new Date();
+    // Mengubah ke format YYYY-MM-DD
+    setSelectedDateString(today.toISOString().slice(0, 10));
+  }, []);
 
   const activities = [
     {
@@ -40,11 +48,19 @@ export default function ActivitiesView() {
     <div className="animate-in fade-in slide-in-from-right-4 duration-300 relative">
       {/* Header Actions */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold">Tue, 24 Oct</h2>
         
-        {/* 4. TOMBOL TRIGGER: Tambahkan onClick */}
+        {/* 4. PERBAIKAN: Input sekarang menggunakan state string yang aman */}
+        <input
+          type="date"
+          className="text-lg font-bold bg-transparent outline-none cursor-pointer placeholder:text-slate-800"
+          value={selectedDateString}
+          onChange={(e) => setSelectedDateString(e.target.value)}
+        />
+        
         <button 
           onClick={() => setIsModalOpen(true)}
+          // Opsional: suppressHydrationWarning jika ada ekstensi browser yang menyuntikkan atribut ID
+          suppressHydrationWarning
           className="flex items-center gap-1 bg-[#FF8FAB] hover:bg-[#ff7aa0] text-black text-xs font-bold px-4 py-2 rounded-full shadow-sm transition-transform active:scale-95"
         >
           <Plus size={14} />
@@ -119,13 +135,14 @@ export default function ActivitiesView() {
         </div>
       </div>
 
-      {/* 5. RENDER MODAL: Bungkus dengan AnimatePresence */}
+      {/* Render Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <AddActivityModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            selectedDate={new Date()} 
+            // Pastikan mengirim Date object jika modal membutuhkannya
+            selectedDate={selectedDateString ? new Date(selectedDateString) : new Date()} 
           />
         )}
       </AnimatePresence>
