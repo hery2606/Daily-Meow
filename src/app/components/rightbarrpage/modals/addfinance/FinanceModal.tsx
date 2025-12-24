@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { X, Disc, Coins, Delete, Check, FileText } from "lucide-react";
-// 1. Import Framer Motion
 import { motion, easeIn, easeOut } from "framer-motion";
 
 interface FinanceModalProps {
@@ -18,14 +17,12 @@ export default function FinanceModal({
   selectedDate,
   onSwitchToActivity,
 }: FinanceModalProps) {
-  // State UI Tabs
   const [activeTab, setActiveTab] = useState<"activity" | "finance">("finance");
   
   // State Logic Finansial
   const [amount, setAmount] = useState<string>("0");
   const [type, setType] = useState<"pengeluaran" | "pemasukan">("pengeluaran");
 
-  // Format tanggal
   const displayDate = selectedDate
     ? selectedDate.toLocaleDateString("en-US", {
         weekday: "short",
@@ -52,7 +49,6 @@ export default function FinanceModal({
     }
   };
 
-  // 2. Definisi Animasi (Sama persis dengan AddActivityModal)
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95, y: 10 },
     visible: { 
@@ -70,23 +66,19 @@ export default function FinanceModal({
   };
 
   return (
-    // 3. Ganti div Overlay menjadi motion.div
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      // Hapus class animate-in fade-in bawaan tailwind
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
     >
       
-      {/* 4. Ganti Container Modal menjadi motion.div */}
       <motion.div
         variants={modalVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
         onClick={(e) => e.stopPropagation()}
-        // Hapus class animate-in zoom-in bawaan tailwind
         className="w-full max-w-105 rounded-[30px] bg-white p-6 shadow-2xl relative"
       >
         
