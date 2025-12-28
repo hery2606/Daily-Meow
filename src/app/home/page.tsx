@@ -1,11 +1,11 @@
 "use client";
-import Calendar from "@/app/calendar/page";
+import CalendarPage from "@/app/calendar/page";
 
 export default function Home() {
   return (
-    <div className="flex p-6 min-h-screen items-center justify-center bg-white">
-      <div className=" max-h-screen w-full ">
-        <Calendar />
+    <div className="flex p-1 items-center justify-center">
+      <div className="w-full">
+        <CalendarPage />
       </div>
     </div>
   );

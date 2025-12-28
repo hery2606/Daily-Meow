@@ -2,19 +2,26 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Cat, PawPrint, ArrowRight } from "lucide-react";
+import { createPortal } from "react-dom"; 
+import { motion, AnimatePresence } from "framer-motion";
+import { Cat, PawPrint, UserCheck, UserPlus } from "lucide-react";
+import { pb } from "@/lib/pocketbase";
+import LoginModal from "@/app/auth/LoginModal";
+import RegisterModal from "@/app/auth/RegisterModal";
 
-export default function SplashScreen({ onFinish }: { onFinish?: () => void }) {
+export default function SplashScreen() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  
-  // State untuk menyimpan posisi paws (agar tidak error hydration)
   const [paws, setPaws] = useState<{ id: number; x: number; y: number; delay: number; rotate: number }[]>([]);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
 
-  // 1. SOLUSI ERROR HYDRATION: Generate posisi random hanya setelah component mount (client-side)
   useEffect(() => {
+    setMounted(true); 
     const randomPaws = Array.from({ length: 8 }).map((_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -23,66 +30,58 @@ export default function SplashScreen({ onFinish }: { onFinish?: () => void }) {
       rotate: Math.random() * 360,
     }));
     setPaws(randomPaws);
+
+    const checkAuth = () => {
+        if (pb.authStore.isValid && pb.authStore.model) {
+            setIsLoggedIn(true);
+            setUserName(pb.authStore.model.name || "User");
+        } else {
+            setIsLoggedIn(false);
+        }
+    };
+    checkAuth();
   }, []);
 
-  // 2. Simulasi Loading
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((old) => {
         if (old >= 100) {
           clearInterval(timer);
-          setIsLoaded(true); // Loading selesai, tampilkan tombol
+          setIsLoaded(true);
           return 100;
         }
-        const diff = Math.random() * 10;
-        return Math.min(old + diff, 100);
+        return Math.min(old + (Math.random() * 10), 100);
       });
     }, 200);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Handler Tombol Lanjut
-  const handleContinue = () => {
-    if (onFinish) {
-      onFinish();
+  const handleMainButton = () => {
+    if (isLoggedIn) {
+        router.push("/home");
     } else {
-      router.push("/home");
+        setShowRegister(true);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#FF9A9E] via-[#FECFEF] to-[#F8BBD0] overflow-hidden font-sans">
-      
-      {/* --- BACKGROUND DECORATION (Floating Paws) --- */}
-      {/* Paws hanya dirender jika state sudah terisi (client-side) */}
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-linear-to-br from-[#FF9A9E] via-[#FECFEF] to-[#F8BBD0] overflow-hidden font-sans">
       {paws.map((paw) => (
         <motion.div
           key={paw.id}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: [0, 0.4, 0], scale: [0.5, 1, 0.5], y: -50 }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            delay: paw.delay,
-            ease: "easeInOut",
-          }}
-          style={{
-            position: "absolute",
-            left: `${paw.x}%`,
-            top: `${paw.y}%`,
-            rotate: paw.rotate,
-          }}
+          transition={{ duration: 4, repeat: Infinity, delay: paw.delay, ease: "easeInOut" }}
+          style={{ position: "absolute", left: `${paw.x}%`, top: `${paw.y}%`, rotate: paw.rotate }}
           className="text-white pointer-events-none"
         >
           <PawPrint size={60} />
         </motion.div>
       ))}
 
-      {/* --- MAIN CONTENT --- */}
       <div className="relative z-10 flex flex-col items-center">
-        
-        {/* LOGO CONTAINER */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -91,17 +90,12 @@ export default function SplashScreen({ onFinish }: { onFinish?: () => void }) {
         >
           <div className="w-40 h-40 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border-4 border-white/50 relative">
              <Cat size={80} className="text-white drop-shadow-md" strokeWidth={2.5} />
-             <motion.div 
-               animate={{ rotate: [0, 10, -10, 0] }}
-               transition={{ repeat: Infinity, duration: 2 }}
-               className="absolute -top-2 -right-2 text-yellow-300"
-             >
+             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute -top-2 -right-2 text-yellow-300">
                 ✨
              </motion.div>
           </div>
         </motion.div>
 
-        {/* TEXT: APP NAME */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -112,14 +106,12 @@ export default function SplashScreen({ onFinish }: { onFinish?: () => void }) {
             Daily Meow
           </h1>
           <p className="text-white/80 text-sm font-medium tracking-widest uppercase">
-            Organize with Cuteness
+            {isLoggedIn ? `Welcome back, ${userName}!` : "Organize with Cuteness"}
           </p>
         </motion.div>
 
-        {/* CONTAINER BAWAH: Loading Bar atau Tombol */}
-        <div className="h-16 flex items-center justify-center min-w-[240px]">
+        <div className="h-16 flex items-center justify-center min-w-60">
           {!isLoaded ? (
-            // --- TAMPILAN SAAT LOADING ---
             <div className="w-full flex flex-col items-center">
               <div className="w-60 h-2 bg-white/30 rounded-full overflow-hidden relative">
                 <motion.div
@@ -129,30 +121,64 @@ export default function SplashScreen({ onFinish }: { onFinish?: () => void }) {
                   transition={{ ease: "linear" }}
                 />
               </div>
-              <motion.p 
-                className="text-white/90 text-xs font-bold mt-3"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              >
+              <motion.p className="text-white/90 text-xs font-bold mt-3" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }}>
                 Loading {Math.round(progress)}%...
               </motion.p>
             </div>
           ) : (
-            // --- TOMBOL LANJUTKAN (Muncul setelah selesai) ---
             <motion.button
               initial={{ opacity: 0, scale: 0.8, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleContinue}
-              className="bg-white text-pink-500 font-bold py-3 px-8 rounded-full shadow-lg flex items-center gap-2 transition-colors hover:bg-pink-50"
+              onClick={handleMainButton}
+              className={`
+                font-bold py-3 px-8 rounded-full shadow-lg flex items-center gap-2 transition-all
+                ${isLoggedIn 
+                    ? "bg-white text-purple-600 hover:bg-purple-50" 
+                    : "bg-pink-500 text-white hover:bg-pink-600 border-2 border-white/50" 
+                }
+              `}
             >
-              Lanjutkan <ArrowRight size={20} />
+              {isLoggedIn ? (
+                  <> <UserCheck size={20} /> Lanjut ke Home </>
+              ) : (
+                  <> <UserPlus size={20} /> Mulai Sekarang </>
+              )}
             </motion.button>
           )}
         </div>
+        {!isLoggedIn && isLoaded && (
+            <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={() => setShowLogin(true)}
+                className="mt-6 text-white/80 text-sm font-medium hover:text-white hover:underline transition-all"
+            >
+                Sudah punya akun? Login
+            </motion.button>
+        )}
 
       </div>
-    </div>
+
+      <AnimatePresence>
+        {showLogin && (
+            <LoginModal 
+                isOpen={showLogin} 
+                onClose={() => setShowLogin(false)} 
+                onSwitchToRegister={() => { setShowLogin(false); setShowRegister(true); }}
+            />
+        )}
+        {showRegister && (
+            <RegisterModal 
+                isOpen={showRegister} 
+                onClose={() => setShowRegister(false)} 
+                onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }}
+            />
+        )}
+      </AnimatePresence>
+
+    </div>,
+    document.body 
   );
 }
