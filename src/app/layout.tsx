@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-// Import Layout Wrapper yang baru kita buat
-import MainLayout from "./components/layout/MainLayout";
+import MainLayout from "./layout/MainLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Daily Meow | Dashboard",
-  description: "Organize your day with cuteness",
+  description: "Organize your daily activities and finances with Daily Meow.",
 };
 
 export default function RootLayout({
@@ -26,10 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Panggil MainLayout di sini */}
-        <MainLayout>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased  [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']`}>
+        <MainLayout >
           {children}
         </MainLayout>
       </body>

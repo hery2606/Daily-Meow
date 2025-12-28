@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import { MonthlyMarkers } from "@/services/dailyService";
 
-// Definisi Tipe Data untuk Props
 export interface CalendarDayItem {
   date: number;
   isCurrentMonth: boolean;
@@ -13,16 +12,17 @@ interface GridCalendarProps {
   calendarData: CalendarDayItem[];
   selectedDate: Date | null;
   onDateClick: (date: Date) => void;
+  markers: MonthlyMarkers;
 }
 
 export default function GridCalendar({
   calendarData,
   selectedDate,
   onDateClick,
+  markers,
 }: GridCalendarProps) {
   const daysOfWeek = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-  // Helper Cek Hari Ini
   const isToday = (date: Date) => {
     const today = new Date();
     return (
@@ -32,7 +32,6 @@ export default function GridCalendar({
     );
   };
 
-  // Helper Cek Tanggal Terpilih
   const isSelected = (date: Date) => {
     if (!selectedDate) return false;
     return (
@@ -42,83 +41,92 @@ export default function GridCalendar({
     );
   };
 
+  const toDateKey = (date: Date) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  const getBorderStyle = (
+    isDateSelected: boolean, 
+    isDateToday: boolean, 
+    activityColors: string[] = []
+  ) => {
+    if (isDateSelected) return "bg-sky-100 border-sky-500 ring-2 ring-sky-300 border-2";
+    if (isDateToday) return "bg-white border-pink-500 ring-1 sm:ring-2 ring-pink-200 border-2";
+    if (activityColors.length > 0) {
+      const color = activityColors[0];
+      switch (color) {
+        case "pink": return "bg-pink-100 border-pink-400 border-2 ring-pink-200 ring-2";
+        case "blue": return "bg-sky-100 border-sky-400 ring-2 ring-sky-200 border-2";
+        case "yellow": return "bg-amber-50 border-amber-500 border-2 text-amber-600";
+        case "green": return "bg-emerald-50 border-emerald-500 border-2 text-emerald-600";
+        default: return "bg-slate-50 border-slate-300 border-2";
+      }
+    }
+    return "bg-white/80 border-white/50 hover:bg-white hover:border-pink-200 border";
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Header Nama Hari */}
-      <div className="flex-none grid grid-cols-7 mb-2 text-center">
+      <div className="flex-none grid grid-cols-7 mb-1 sm:mb-2 text-center">
         {daysOfWeek.map((day) => (
-          <div
-            key={day}
-            className="text-xs font-bold text-slate-600 tracking-widest opacity-80 py-1"
-          >
+          <div key={day} className="text-[10px] sm:text-xs font-bold text-slate-600 tracking-widest opacity-80 py-1">
             {day}
           </div>
         ))}
       </div>
 
-      {/* Grid Tanggal */}
-      <div className="flex-1 grid grid-cols-7 grid-rows-6 gap-2 sm:gap-3">
+  
+      <div className="flex-1 grid grid-cols-7 grid-rows-6 gap-1 sm:gap-2 md:gap-3 ">
         {calendarData.map((item, index) => {
           const isDateToday = isToday(item.fullDate);
           const isDateSelected = isSelected(item.fullDate);
+          const dateKey = toDateKey(item.fullDate);
+          const dayMarker = markers[dateKey];
+          const hasActivity = dayMarker?.hasActivity; 
+          const hasFinance = dayMarker?.hasFinance;   
+          const activityColors = dayMarker?.activityColors || []; 
 
           return (
             <div
               key={index}
               onClick={() => onDateClick(item.fullDate)}
               className={`
-                relative flex flex-col justify-between p-2 sm:p-3 h-full w-full rounded-2xl transition-all shadow-sm cursor-pointer group border
+                relative flex flex-col justify-between p-1 sm:p-2 md:p-3 h-full w-full rounded-xl sm:rounded-2xl transition-all shadow-sm cursor-pointer group
                 ${
-                  isDateSelected
-                    ? "bg-sky-100 border-sky-300 ring-2 ring-sky-200 scale-95"
-                    : isDateToday
-                    ? "bg-white border-pink-400 ring-2 ring-pink-300"
-                    : item.isCurrentMonth
-                    ? "bg-white/80 border-white/50 hover:bg-white hover:border-pink-200"
-                    : "bg-pink-100/30 border-transparent text-slate-400/70 hover:bg-pink-100/50"
+                  !item.isCurrentMonth 
+                    ? "bg-pink-50/30 border border-transparent text-slate-400 hover:bg-pink-50/50" 
+                    : getBorderStyle(isDateSelected, isDateToday, activityColors)
                 }
+                ${isDateSelected ? "scale-95" : ""}
               `}
             >
-              {/* Angka Tanggal */}
-              <span
-                className={`text-sm sm:text-base lg:text-lg font-bold ${
-                  isDateSelected || isDateToday
-                    ? "text-slate-800"
-                    : "text-slate-600"
-                }`}
-              >
+              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-bold leading-none">
                 {item.date}
               </span>
 
-              {/* Indikator "Hari Ini" */}
               {isDateToday && !isDateSelected && (
-                <span className="absolute top-3 right-3 h-2 w-2 bg-pink-500 rounded-full ring-2 ring-pink-200 animate-pulse"></span>
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 bg-pink-500 rounded-full animate-pulse"></span>
               )}
 
-              {/* --- BAGIAN ICON (🍩 & 🪙) --- */}
-              {/* items-center & justify-center memastikan posisi di tengah */}
-              <div className="flex gap-1 items-left justify-left mt-auto  pb-1 text-2xl sm:text-lg">
+              <div className="flex flex-wrap gap-0.5 sm:gap-1 items-end justify-start mt-auto pb-0 sm:pb-1">
                 
-                {/* Dummy Logic: Tampilkan Donut (Aktivitas) pada tanggal ganjil */}
-                {item.isCurrentMonth && item.date % 2 !== 0 && (
-                   <span className="text-xs sm:text-lg filter drop-shadow-sm" title="Activity">
+                {item.isCurrentMonth && hasActivity && (
+                   <span className="text-[10px] sm:text-xs md:text-sm filter drop-shadow-sm leading-none" title="Ada Aktivitas">
                      🍩
                    </span>
                 )}
 
-                {/* Dummy Logic: Tampilkan Coin (Finance) pada tanggal kelipatan 3 */}
-                {item.isCurrentMonth && item.date % 5 === 0 && (
-                   <span className="text-xs sm:text-lg filter drop-shadow-sm" title="Finance">
+                {item.isCurrentMonth && hasFinance && (
+                   <span className="text-[10px] sm:text-xs md:text-sm filter drop-shadow-sm leading-none grayscale-[0.2]" title="Ada Transaksi">
                      🪙
                    </span>
                 )}
-
               </div>
 
-              {/* Hover Effect 'View' */}
               {item.isCurrentMonth && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <span className="bg-black/5 text-slate-700 text-xs font-bold px-2 py-1 rounded-full backdrop-blur-sm">
+                <div className="hidden sm:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="bg-black/5 text-slate-700 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full backdrop-blur-sm">
                     View
                   </span>
                 </div>
