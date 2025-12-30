@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import { createPortal } from "react-dom";
 import { X, Check, FileText, Calendar, Clock, AlignLeft, ListTodo, Palette } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAddActivityModal, AddActivityModalProps } from "../hooks/useAddActivityModal"; // Import hook logika
+import { motion} from "framer-motion";
+import { useAddActivityModal, AddActivityModalProps } from "../hooks/useAddActivityModal"; 
 
 export default function AddActivityModal(props: AddActivityModalProps) {
   const {
