@@ -27,6 +27,7 @@ export default function DetailCalendarModal({ isOpen, onClose, selectedDate }: D
   } = useDetailCalendar(selectedDate, isOpen);
 
   const [mounted, setMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   const formattedDate = selectedDate
@@ -60,7 +61,7 @@ export default function DetailCalendarModal({ isOpen, onClose, selectedDate }: D
       opacity: 1, 
       scale: 1, 
       y: 0, 
-      transition: { type: "spring" as "spring", damping: 25, stiffness: 300 } 
+      transition: { type: "spring" as const, damping: 25, stiffness: 300 } 
     },
     exit: { opacity: 0, scale: 0.95, y: -20 },
   };
@@ -149,7 +150,7 @@ export default function DetailCalendarModal({ isOpen, onClose, selectedDate }: D
                         </div>
                         <div className="flex items-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => handleDelete(item.id, item.title, item.type)} className="p-2 rounded-xl bg-rose-100 text-rose-600 hover:bg-rose-500 hover:text-white transition">
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </motion.div>

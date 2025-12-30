@@ -119,6 +119,9 @@ export const useDetailCalendar = (selectedDate: Date | null, isOpen: boolean) =>
         } catch (error) {
           Swal.showErrorToast("Gagal menghapus.");
         }
+        setTimeout(() => {
+          window.location.reload();
+      }, 700);
       }
     );
   };
